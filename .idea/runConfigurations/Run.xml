@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command" nameIsGenerated="true">
+    <option name="command" value="run" />
+    <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+    <option name="channel" value="DEFAULT" />
+    <option name="allFeatures" value="false" />
+    <option name="emulateTerminal" value="true" />
+    <option name="backtrace" value="SHORT" />
+    <envs>
+      <env name="LD_LIBRARY_PATH" value="$LD_LIBRARY_PATH:$PROJECT_DIR$/../../Programs/deepspeech" />
+      <env name="LIBRARY_PATH" value="$LIBRARY_PATH:$PROJECT_DIR$/../../Programs/deepspeech" />
+    </envs>
+    <option name="isRedirectInput" value="false" />
+    <option name="redirectInputPath" value="" />
+    <method v="2">
+      <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+    </method>
+  </configuration>
+</component>

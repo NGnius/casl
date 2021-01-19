@@ -12,6 +12,8 @@ See `casl.json` in this project for a sample configuration.
 
 - **model**: Absolute path to the deepspeech model (this should be a `.tflite` or `.pbmm` file depending on your platform)
 - **scorer**(optional): Absolute path to the external scorer (omit to use integrated scorer)
+- **carryover_buffer_size**: Amount of buffer samples to keep when cleaning up the buffer
+- **refresh_buffer_threshold**: Minimum buffer size to trigger a buffer cleanup
 
 
 ## Commands

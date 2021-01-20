@@ -2,6 +2,7 @@
 mod command;
 mod config;
 mod audio;
+mod preprocessor;
 
 use std::sync::mpsc::{channel};
 use cpal::traits::{DeviceTrait, HostTrait};

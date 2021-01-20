@@ -17,3 +17,4 @@ cpal = { version = "0.13.1" }
 
 # misc (utilities)
 ctrlc = { version = "" }
+regex = { version = "" }

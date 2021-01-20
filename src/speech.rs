@@ -28,6 +28,7 @@ pub fn process_audio_loop(cntrl: Receiver<bool>, audio: Receiver<i16>, casl_conf
             stream = speech2text.create_stream().unwrap();
             if meta.safe_to_refresh {
                 // TODO command handling
+                println!("Handling: `{}` -> `{}`", meta.phrase_raw, meta.phrase);
                 let mut carryover = std::vec::Vec::with_capacity(casl_config.carryover_buffer_size);
                 carryover.extend(&buffer[buffer.len()-casl_config.carryover_buffer_size..]);
                 buffer = std::vec::Vec::with_capacity(casl_config.refresh_buffer_threshold);
@@ -79,17 +80,17 @@ pub fn process_metadata(metadata: &deepspeech::Metadata, length_ms: u32, casl_co
     }
     let ends_with_gap: bool = length_ms - (last_sound * TIMESTEP_TO_MS) > casl_config.gap_detection_ms as u32;
     // preprocess text
-    let mut processed_text = String::new();
+    let mut processed_text = text.clone();
     for pre in &casl_config.preprocessors {
         processed_text = pre.preprocessor().process(&processed_text).to_string();
     }
-    //println!("Heard: {}", text);
+    if last_gap != 0 { last_gap -= 1; } // buffer zone, deepspeech is only accurate to ~20ms
     MetadataResult {
         safe_to_refresh: ends_with_gap,
         phrase_raw: text,
         phrase: processed_text,
         last_gap_start_ms: (last_sound+1) * TIMESTEP_TO_MS,
-        last_gap_end_ms: (last_gap-1) * TIMESTEP_TO_MS,
+        last_gap_end_ms: last_gap * TIMESTEP_TO_MS,
     }
 }
 

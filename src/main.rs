@@ -1,7 +1,7 @@
 // CASL (Command-Action Speech Loopback)
 mod command;
 mod config;
-mod audio;
+mod speech;
 mod preprocessor;
 
 use std::sync::mpsc::{channel};
@@ -20,8 +20,9 @@ fn main() -> Result<(), ()> {
     // start audio processing thread
     let (audio_thread_cntrl_tx, audio_thread_cntrl_rx) = channel();
     let (audio_thread_sample_tx, audio_thread_sample_rx) = channel();
+    let audio_conf = casl_config.clone();
     let audio_thread = std::thread::spawn(move || {
-        audio::process_audio_loop(audio_thread_cntrl_rx, audio_thread_sample_rx, &casl_config);
+        speech::process_audio_loop(audio_thread_cntrl_rx, audio_thread_sample_rx, &audio_conf);
     });
 
     // start audio capturing thread
@@ -38,8 +39,13 @@ fn main() -> Result<(), ()> {
         }
     }
     let input_stream = input_device.build_input_stream(&config.expect("Input device does not support 16kHz mode"), move |a, b| {
-        audio::capture_audio(a, b, audio_thread_sample_tx.clone());
-    }, audio::capture_error).unwrap();
+        speech::capture_audio(a, b, audio_thread_sample_tx.clone());
+    }, speech::capture_error).unwrap();
+
+    // ready (debug info)
+    println!("Model {}", &casl_config.model);
+    println!("Scorer {}", &casl_config.scorer.unwrap_or("[internal]".to_owned()));
+    println!("CASL, ready! ({} pre-processors, {} commands)", casl_config.preprocessors.len(), 0);
 
     // wait for interrupt signal
     let (stop_tx, stop_rx) = channel();

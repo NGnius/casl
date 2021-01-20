@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use crate::preprocessor::{Remapper, ITextPreprocessor};
+use crate::preprocessor::{ITextPreprocessor, SimpleMapper, RedirectConfig};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -15,21 +16,26 @@ impl Config {
 
 }
 
-
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum PreprocessorConfig {
     Remap {
-        mappings: Vec<Mapping>,
+        mappings: HashMap<String, String>,
     },
+    Redirect {
+        path: String,
+    }
 }
 
 impl PreprocessorConfig {
     pub fn preprocessor(&self) -> Box<dyn ITextPreprocessor> {
         match self {
             PreprocessorConfig::Remap { mappings } => {
-                return Box::new(Remapper::from_mappings(mappings));
+                return Box::new(SimpleMapper::from_mappings(mappings));
             },
+            PreprocessorConfig::Redirect { path } => {
+                return Box::new(RedirectConfig::from_path(std::path::Path::new(path)));
+            }
         }
     }
 }
@@ -39,23 +45,10 @@ impl Clone for PreprocessorConfig {
         match self {
             PreprocessorConfig::Remap { mappings} => PreprocessorConfig::Remap {
                 mappings: mappings.clone(),
+            },
+            PreprocessorConfig::Redirect { path } => PreprocessorConfig::Redirect {
+                path: path.clone(),
             }
         }
     }
 }
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Mapping {
-    pub search: String,
-    pub replace: String,
-    pub name: Option<String>,
-}
-
-/*impl Clone for Mapping {
-    fn clone(&self) -> Self {
-        Mapping {
-            search: self.search.clone(),
-            replace: self.replace.clone(),
-        }
-    }
-}*/

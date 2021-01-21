@@ -53,5 +53,14 @@
         "nine(\\s|$)": "9$1"
       }
     }
+  ],
+  "commands": [
+    {
+      "type": "Shell",
+      "precondition": "^starts?\\ssteam",
+      "command": "steam",
+      "shell": "/bin/bash",
+      "use_raw_text": true
+    }
   ]
 }

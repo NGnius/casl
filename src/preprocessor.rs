@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::config;
 
 pub trait ITextPreprocessor {
-    fn process(&self, input: & str) -> String;
+    fn process(&self, input: &str) -> String;
 }
 
 #[derive(Clone)]

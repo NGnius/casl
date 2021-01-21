@@ -3,6 +3,7 @@ mod command;
 mod config;
 mod speech;
 mod preprocessor;
+mod command_api;
 
 use std::sync::mpsc::{channel};
 use cpal::traits::{DeviceTrait, HostTrait};
@@ -45,7 +46,7 @@ fn main() -> Result<(), ()> {
     // ready (debug info)
     println!("Model {}", &casl_config.model);
     println!("Scorer {}", &casl_config.scorer.unwrap_or("[internal]".to_owned()));
-    println!("CASL, ready! ({} pre-processors, {} commands)", casl_config.preprocessors.len(), 0);
+    println!("CASL, ready! ({} pre-processors, {} commands)", casl_config.preprocessors.len(), casl_config.commands.len());
 
     // wait for interrupt signal
     let (stop_tx, stop_rx) = channel();

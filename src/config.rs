@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use crate::preprocessor::{ITextPreprocessor, SimpleMapper, RedirectConfig};
+use crate::command::{ICommand, SocketCommand, StdIOCommand, ShellCommand, RedirectCommand};
 use std::collections::HashMap;
+use regex::{RegexBuilder};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -10,6 +12,7 @@ pub struct Config {
     pub refresh_buffer_threshold: usize,
     pub gap_detection_ms: usize,
     pub preprocessors: Vec<PreprocessorConfig>,
+    pub commands: Vec<CommandConfig>,
 }
 
 impl Config {
@@ -50,5 +53,68 @@ impl Clone for PreprocessorConfig {
                 path: path.clone(),
             }
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(tag = "type")]
+pub enum CommandConfig {
+    Net {
+        precondition: String,
+        use_raw_text: bool,
+        dst_port: usize,
+        src_port: usize,
+        src_addr: Option<String>,
+        dst_addr: String,
+    },
+    StdIO {
+        precondition: String,
+        command: String,
+        use_raw_text: bool,
+    },
+    Shell { /* !! Does not use API !! */
+        precondition: String,
+        command: String,
+        shell: String,
+        use_raw_text: bool,
+    },
+    Redirect {
+        precondition: String,
+        use_raw_text: bool,
+        path: String,
+    }
+}
+
+impl CommandConfig {
+    pub fn command(&self) -> Box<dyn ICommand> {
+        match self {
+            CommandConfig::Net { .. } => Box::new(SocketCommand::new(self)),
+            CommandConfig::StdIO { .. } => Box::new(StdIOCommand::new(self)),
+            CommandConfig::Shell { .. } => Box::new(ShellCommand::new(self)),
+            CommandConfig::Redirect { .. } => Box::new(RedirectCommand::new(self)),
+        }
+    }
+
+    pub fn use_raw(&self) -> bool {
+        match self {
+            CommandConfig::Net { use_raw_text, .. } => *use_raw_text,
+            CommandConfig::StdIO { use_raw_text, .. } => *use_raw_text,
+            CommandConfig::Shell { use_raw_text, .. } => *use_raw_text,
+            CommandConfig::Redirect { use_raw_text, .. } => *use_raw_text,
+        }
+    }
+
+    pub fn is_match(&self, text: &str) -> bool {
+        let precondition = match self {
+            CommandConfig::Net { precondition, .. } => precondition,
+            CommandConfig::StdIO { precondition, .. } => precondition,
+            CommandConfig::Shell { precondition, .. } => precondition,
+            CommandConfig::Redirect { precondition, .. } => precondition
+        };
+        let re = RegexBuilder::new(precondition)
+            .case_insensitive(true)
+            .build()
+            .expect(&format!("Failed to compile the regex {} for CommandConfig", precondition));
+        re.is_match(text)
     }
 }

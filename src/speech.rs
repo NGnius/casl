@@ -27,7 +27,7 @@ pub fn process_audio_loop(cntrl: Receiver<bool>, audio: Receiver<i16>, casl_conf
             // refresh stream
             stream = speech2text.create_stream().unwrap();
             if meta.safe_to_refresh {
-                // TODO command handling
+                crate::command::process_commands(&meta, casl_config);
                 println!("Handling: `{}` -> `{}`", meta.phrase_raw, meta.phrase);
                 let mut carryover = std::vec::Vec::with_capacity(casl_config.carryover_buffer_size);
                 carryover.extend(&buffer[buffer.len()-casl_config.carryover_buffer_size..]);

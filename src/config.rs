@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use crate::preprocessor::{ITextPreprocessor, SimpleMapper, RedirectConfig};
-use crate::command::{ICommand, SocketCommand, StdIOCommand, ShellCommand, RedirectCommand};
+use crate::command::{ICommand, SocketCommand, StdIOCommand, ShellCommand, RedirectCommand, AutoActionCommand};
 use std::collections::HashMap;
 use regex::{RegexBuilder};
+use crate::command_api::CommandAction;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -78,6 +79,11 @@ pub enum CommandConfig {
         shell: String,
         use_raw_text: bool,
     },
+    Action {
+        precondition: String,
+        use_raw_text: bool,
+        action: CommandAction,
+    },
     Redirect {
         precondition: String,
         use_raw_text: bool,
@@ -92,6 +98,7 @@ impl CommandConfig {
             CommandConfig::StdIO { .. } => Box::new(StdIOCommand::new(self)),
             CommandConfig::Shell { .. } => Box::new(ShellCommand::new(self)),
             CommandConfig::Redirect { .. } => Box::new(RedirectCommand::new(self)),
+            CommandConfig::Action { .. } => Box::new(AutoActionCommand::new(self)),
         }
     }
 
@@ -101,6 +108,7 @@ impl CommandConfig {
             CommandConfig::StdIO { use_raw_text, .. } => *use_raw_text,
             CommandConfig::Shell { use_raw_text, .. } => *use_raw_text,
             CommandConfig::Redirect { use_raw_text, .. } => *use_raw_text,
+            CommandConfig::Action { use_raw_text, .. } => *use_raw_text,
         }
     }
 
@@ -109,7 +117,8 @@ impl CommandConfig {
             CommandConfig::Net { precondition, .. } => precondition,
             CommandConfig::StdIO { precondition, .. } => precondition,
             CommandConfig::Shell { precondition, .. } => precondition,
-            CommandConfig::Redirect { precondition, .. } => precondition
+            CommandConfig::Redirect { precondition, .. } => precondition,
+            CommandConfig::Action { precondition, .. } => precondition,
         };
         let re = RegexBuilder::new(precondition)
             .case_insensitive(true)

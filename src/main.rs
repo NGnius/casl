@@ -4,6 +4,8 @@ mod config;
 mod speech;
 mod preprocessor;
 mod command_api;
+mod action;
+mod casl_action;
 
 use std::sync::mpsc::{channel};
 use cpal::traits::{DeviceTrait, HostTrait};

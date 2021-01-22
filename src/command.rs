@@ -2,7 +2,7 @@ use crate::speech::MetadataResult;
 use crate::config::{Config, CommandConfig};
 use std::process::{Command, Stdio};
 use std::io::{BufWriter, BufReader, BufRead};
-use crate::command_api::{Payload, Response};
+use crate::command_api::{Payload, Response, CommandAction};
 use regex::{Regex, RegexBuilder};
 use std::path::PathBuf;
 
@@ -72,7 +72,8 @@ impl SocketCommand {
                 println!("Command error received from {}: {}", &dst, &err);
                 return;
             }
-            // TODO perform action
+            // perform action
+            resp.action.action().act();
         } else {
             println!("Error receiving UDP packet from {}, aborting SocketCommand", &dst);
             return;
@@ -129,7 +130,8 @@ impl StdIOCommand {
             println!("Command `{}` error: {}", &command, &err);
             return;
         }
-        // TODO perform action
+        // perform action
+        resp.action.action().act();
     }
 }
 
@@ -216,5 +218,29 @@ impl Clone for RedirectCommand {
             command: conf.command(),
             path: std::path::PathBuf::from(self.path.clone()),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct AutoActionCommand {
+    action: CommandAction,
+}
+
+impl AutoActionCommand {
+    pub fn new(conf: &CommandConfig) -> AutoActionCommand {
+        if let CommandConfig::Action { action, ..} = conf {
+            AutoActionCommand {
+                action: action.clone(),
+            }
+        } else {panic!("Non-Action config given to AutoActionCommand");}
+    }
+}
+
+impl ICommand for AutoActionCommand {
+    fn run(&self, _input: &str) {
+        let action = self.action.clone();
+        std::thread::spawn(move || {
+            action.action().act();
+        });
     }
 }

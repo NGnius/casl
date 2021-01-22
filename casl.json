@@ -57,10 +57,20 @@
   "commands": [
     {
       "type": "Shell",
-      "precondition": "^starts?\\ssteam",
+      "precondition": "^starts?\\ssteam(\\s|$)",
       "command": "steam",
       "shell": "/bin/bash",
       "use_raw_text": true
+    },
+    {
+      "type": "Action",
+      "precondition":"^hello\\sworld$",
+      "use_raw_text": true,
+      "action": {
+        "type": "CASL",
+        "operation": "hello world",
+        "parameters": ["CASL"]
+      }
     }
   ]
 }

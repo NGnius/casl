@@ -14,6 +14,7 @@ pub struct Config {
     pub gap_detection_ms: usize,
     pub preprocessors: Vec<PreprocessorConfig>,
     pub commands: Vec<CommandConfig>,
+    pub debug: bool,
 }
 
 impl Config {

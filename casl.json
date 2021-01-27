@@ -71,6 +71,22 @@
         "operation": "hello world",
         "parameters": ["CASL"]
       }
+    },
+    {
+      "type": "Net",
+      "precondition": ".+",
+      "use_raw_text": true,
+      "dst_port": 3198,
+      "dst_addr": "0.0.0.0",
+      "src_port": 42069,
+      "src_addr": "127.0.0.1"
+    },
+    {
+      "type": "StdIO",
+      "precondition": ".+",
+      "use_raw_text": true,
+      "command": "./examples/cli_debug.py"
     }
-  ]
+  ],
+  "debug": true
 }

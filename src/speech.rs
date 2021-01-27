@@ -15,6 +15,9 @@ pub fn process_audio_loop(cntrl: Receiver<bool>, audio: Receiver<i16>, casl_conf
     let mut buffer = std::vec::Vec::with_capacity(casl_config.refresh_buffer_threshold);
     let mut is_exiting = cntrl.try_recv().unwrap_or(false);
     let mut last_carryover = 0;
+    if casl_config.debug {
+        println!("Audio processing thread ready");
+    }
     while !is_exiting {
         // process audio until exit signal is received
         process_audio(&audio, &mut stream, &mut buffer, casl_config.carryover_buffer_size);
@@ -34,14 +37,20 @@ pub fn process_audio_loop(cntrl: Receiver<bool>, audio: Receiver<i16>, casl_conf
                 buffer = std::vec::Vec::with_capacity(casl_config.refresh_buffer_threshold);
                 buffer.extend(&carryover);
             } else {
-                let gap_start_sample = (meta.last_gap_end_ms * TARGET_SAMPLE_RATE / 1000) as usize;
+                let gap_start_sample = (meta.last_gap_end_ms * TARGET_SAMPLE_RATE / 1_000) as usize;
                 let mut carryover = std::vec::Vec::with_capacity(buffer.len()-gap_start_sample);
                 carryover.extend(&buffer[buffer.len()-gap_start_sample..]);
                 buffer = std::vec::Vec::with_capacity(casl_config.refresh_buffer_threshold);
                 buffer.extend(&carryover);
+                if casl_config.debug {
+                    println!("Stream buffer refreshed while still talking, carrying over extra samples ({})", buffer.len());
+                }
             }
             last_carryover = buffer.len();
             stream.feed_audio(&buffer);
+            if casl_config.debug {
+                println!("Stream buffer refreshed (now: {} samples)", buffer.len());
+            }
         }
         is_exiting = cntrl.try_recv().unwrap_or(false);
     }

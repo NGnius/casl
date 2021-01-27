@@ -19,6 +19,9 @@ fn main() -> Result<(), ()> {
     let json_file = std::fs::File::open("casl.json").unwrap();
     let json_reader = std::io::BufReader::new(json_file);
     let casl_config: config::Config = serde_json::from_reader(json_reader).unwrap();
+    if casl_config.debug {
+        println!("Loaded config with debug messages enabled");
+    }
 
     // start audio processing thread
     let (audio_thread_cntrl_tx, audio_thread_cntrl_rx) = channel();
@@ -27,6 +30,9 @@ fn main() -> Result<(), ()> {
     let audio_thread = std::thread::spawn(move || {
         speech::process_audio_loop(audio_thread_cntrl_rx, audio_thread_sample_rx, &audio_conf);
     });
+    if casl_config.debug {
+        println!("Started audio processing thread");
+    }
 
     // start audio capturing thread
     let host = cpal::default_host();
@@ -46,8 +52,10 @@ fn main() -> Result<(), ()> {
     }, speech::capture_error).unwrap();
 
     // ready (debug info)
-    println!("Model {}", &casl_config.model);
-    println!("Scorer {}", &casl_config.scorer.unwrap_or("[internal]".to_owned()));
+    if casl_config.debug {
+        println!("Model {}", &casl_config.model);
+        println!("Scorer {}", &casl_config.scorer.unwrap_or("[internal]".to_owned()));
+    }
     println!("CASL, ready! ({} pre-processors, {} commands)", casl_config.preprocessors.len(), casl_config.commands.len());
 
     // wait for interrupt signal

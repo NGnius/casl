@@ -6,13 +6,16 @@ use crate::command_api::{Payload, Response, CommandAction};
 use regex::{Regex, RegexBuilder};
 use std::path::PathBuf;
 
-const UDP_BUFFER_BYTES: usize = 4096;
+const UDP_BUFFER_BYTES: usize = 8192;
 
 pub trait ICommand {
     fn run(&self, input: &str);
 }
 
 pub fn process_commands(meta_result: &MetadataResult, casl_config: &Config) {
+    if casl_config.debug {
+        println!("Heard `{}` (processed into `{}`)", meta_result.phrase_raw, meta_result.phrase);
+    }
     for cmd in &casl_config.commands {
         if cmd.use_raw() {
             if cmd.is_match(&meta_result.phrase_raw) {
@@ -65,8 +68,9 @@ impl SocketCommand {
             return;
         }
         // receive response
-        if socket.recv(&mut buf).is_ok() {
-            let resp: Response = serde_json::from_slice(&buf)
+        let recvResult = socket.recv(&mut buf);
+        if recvResult.is_ok() {
+            let resp: Response = serde_json::from_slice(&buf[..recvResult.unwrap()])
                 .expect("Failed to deserialize Response");
             if let Some(err) = resp.error {
                 println!("Command error received from {}: {}", &dst, &err);
@@ -75,7 +79,7 @@ impl SocketCommand {
             // perform action
             resp.action.action().act();
         } else {
-            println!("Error receiving UDP packet from {}, aborting SocketCommand", &dst);
+            println!("Error {} receiving UDP packet from {}, aborting SocketCommand", recvResult.err().unwrap(), &dst);
             return;
         }
     }
@@ -89,7 +93,7 @@ impl ICommand for SocketCommand {
         let dst_port = self.dst_port;
         let src_port = self.src_port;
         std::thread::spawn(move || {
-            Self::thread(input_clone, src_addr, dst_addr, dst_port, src_port);
+            Self::thread(input_clone, src_addr, dst_addr, src_port, dst_port);
         });
     }
 }

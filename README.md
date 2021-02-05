@@ -3,6 +3,27 @@ Command-Action Speech Loopback
 
 A fancy way of saying smart speaker.
 
+## Building
+Compiling requires an extra step because deepspeech is an external (non-rust) library. 
+To install deepspeech, download the latest `native_client` 0.9.X version for your system from [GitHub](https://github.com/mozilla/DeepSpeech/releases/tag/v0.9.3). 
+
+While you're on that page, you should download a model file (both if you're not sure which will work on your platform) and the `deepspeech-0.9.X-models.scorer` file. 
+You will need these later when you run CASL. 
+
+Create a `lib` directory and place all of these downloads in there. 
+
+Finally, add that `lib` directory to the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables.
+
+Now that everything is set up, use `cargo` like any other Rust project (eg `cargo run --release` to run an optimised version).
+
+### Notes
+The deepspeech Rust wrapper officially supports deepspeech version 0.9.0, so if you have issues with 0.9.3 or later try downgrading the model and lib files to that version. 
+
+Environment variables are not persistent if you just set them with `env`.
+
+The `casl.json` configuration in this repo is configured to use the model and scorer in `./lib/`. 
+If you move those, update the config file to reflect those changes.
+
 ## Config
 The CASL configuration is defined in a file named `casl.json` in CASL's current working directory (e.g. beside the CASL binary). 
 CASL will not start without a valid configuration file. 
@@ -82,3 +103,5 @@ There are two ways to communicate with CASL from a command processor:
 - **StdIO**: Use stdin to receive information, stdout to send information, and stderr for debugging
 
 ### API Reference
+// TODO
+(see examples and casl.json in the meantime)

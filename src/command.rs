@@ -68,9 +68,9 @@ impl SocketCommand {
             return;
         }
         // receive response
-        let recvResult = socket.recv(&mut buf);
-        if recvResult.is_ok() {
-            let resp: Response = serde_json::from_slice(&buf[..recvResult.unwrap()])
+        let recv_result = socket.recv(&mut buf);
+        if let Ok(length) = recv_result {
+            let resp: Response = serde_json::from_slice(&buf[..length])
                 .expect("Failed to deserialize Response");
             if let Some(err) = resp.error {
                 println!("Command error received from {}: {}", &dst, &err);
@@ -79,7 +79,7 @@ impl SocketCommand {
             // perform action
             resp.action.action().act();
         } else {
-            println!("Error {} receiving UDP packet from {}, aborting SocketCommand", recvResult.err().unwrap(), &dst);
+            println!("Error {} receiving UDP packet from {}, aborting SocketCommand", recv_result.err().unwrap(), &dst);
             return;
         }
     }
